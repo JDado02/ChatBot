@@ -1,0 +1,6 @@
+# Segreti / configurazione locale
+.env
+
+# Volumi/dati locali eventuali
+*.log
+.idea/

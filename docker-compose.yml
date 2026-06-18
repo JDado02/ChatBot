@@ -1,0 +1,55 @@
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL + pgvector
+  # Immagine ufficiale pgvector: Postgres 16 con l'estensione vector già pronta.
+  # Niente compilazione manuale di pgvector.
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: concierge_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-concierge}
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres_dev_only}
+      # Password del ruolo applicativo NON-superuser 'app_user'.
+      # Letta dallo script 00_create_app_role.sh al primo avvio.
+      # Il NOME del ruolo è fisso ('app_user'); solo la password è configurabile.
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-app_dev_only}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Persistenza dei dati tra un riavvio e l'altro
+      - postgres_data:/var/lib/postgresql/data
+      # Script eseguiti UNA SOLA VOLTA, al primo avvio (DB vuoto), in ordine
+      # alfabetico. Se cambi gli script devi ricreare il volume (vedi docs).
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-postgres} -d ${POSTGRES_DB:-concierge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Redis — memoria delle conversazioni (sessioni con TTL)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: concierge_redis
+    restart: unless-stopped
+    # appendonly: persistenza leggera. Le sessioni hanno comunque un TTL
+    # applicativo, quindi la durabilità qui non è critica.
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:
