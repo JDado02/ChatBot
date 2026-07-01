@@ -93,6 +93,7 @@ docker compose down -v         # ferma e cancella i dati (re-init da zero)
 ├── PROGRESS.md        # stato del progetto e roadmap (il "segnalibro")
 ├── backend/    # codice Python: API, RAG, sicurezza, prenotazioni, governance
 ├── widget/     # widget chat "Aria" (Vanilla JS + Shadow DOM) + pagina demo
+├── scripts/    # setup automatico (setup.sh / setup.ps1)
 ├── db/
 │   ├── init/   # ruolo app, schema+RLS, dati di test (eseguiti all'avvio)
 │   └── test/   # test di isolamento RLS

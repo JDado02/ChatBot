@@ -72,7 +72,7 @@ Backend + widget completi e verificati (Docker + browser). Le prossime azioni ri
 ## Note / questioni aperte
 
 - **Docker**: ora funziona (era WSL2). Se un clone fresco su Windows dà errori di init, controllare che `.sh`/`.sql` siano LF (li forza `.gitattributes`).
-- **Prossimo passo #1: il widget frontend** (Vanilla JS + Shadow DOM) — è il pezzo mancante più importante per un prodotto dimostrabile.
+- **Prossimo passo #1: modello LLM reale** su un PC potente (Ollama) — vedi `docs/SETUP_NUOVO_PC.md`. Il widget e il backend sono pronti; manca solo l'AI vera dietro `/api/search` e `/api/chat`.
 - **LLM in dev**: `/api/search` e `/api/chat` richiedono Ollama (`ollama pull bge-m3` e `llama3`); senza modello gli altri endpoint funzionano.
 - **Sync → async**: gli handler sono sincroni (riuso codice testato); passaggio ad async psycopg quando serve throughput, stesso pattern `set_config`.
 - **CI**: GitHub Action `backend-tests` esegue i 98 test a ogni push. Se non parte, abilitare GitHub Actions nella repo (Settings → Actions).
