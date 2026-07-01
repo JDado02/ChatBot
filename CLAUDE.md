@@ -11,7 +11,10 @@ AI Concierge — un chatbot SaaS **multi-tenant** (caso d'uso principale: hotel)
 - **`CLAUDE.md`** (questo) — regole e vincoli, auto-caricato a ogni sessione. Solo cose stabili.
 - **`PROGRESS.md`** — il **segnalibro**: roadmap, stato attuale, prossimo passo, decisioni. Leggilo per primo.
 - **`README.md`** — panoramica pubblica del progetto + come avviarlo. Da aggiornare quando cambia lo stato.
-- **`docs/`** — documento di architettura + un **report tecnico per ogni passo** completato (`docs/0N_*.md`).
+- **`backend/`** — codice Python (API FastAPI, RAG, sicurezza, chat, prenotazioni, governance). Vedi `backend/README.md`.
+- **`widget/`** — widget chat "Aria" (Vanilla JS + Shadow DOM) + pagina demo. Vedi `widget/README.md`.
+- **`db/`** — `init/` (ruolo, schema+RLS, seed; girano al primo avvio) e `test/` (isolamento RLS).
+- **`docs/`** — documento di architettura, report per-passo (`docs/0N_*.md`), guida test e guida nuovo PC.
 
 ## Flusso di lavoro (IMPORTANTE)
 
@@ -43,9 +46,17 @@ docker compose ps                  # stato container (attendere "healthy")
 ./db/test/run_isolation_test.sh    # test isolamento RLS (atteso: 4x PASS)
 docker compose down                # ferma (i dati restano nel volume)
 docker compose down -v             # ferma E cancella i dati (re-init da zero)
+
+# Backend
+cd backend && pip install -r requirements.txt && pytest   # 98 test offline
+uvicorn app.api.main:app --reload                          # API su :8000 (/docs)
+
+# Widget (pagina demo)
+python -m http.server 5500 --directory widget             # http://localhost:5500
 ```
 
 > Gli script in `db/init/` girano **solo al primo avvio** (volume vuoto). Dopo modifiche a schema/seed: `docker compose down -v && docker compose up -d`.
+> Setup su un nuovo PC (con Ollama): vedi `docs/SETUP_NUOVO_PC.md` e gli script `scripts/setup.*`.
 
 ## Lingua
 

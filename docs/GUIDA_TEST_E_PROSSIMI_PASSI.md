@@ -4,9 +4,9 @@ Guida pratica per **provare l'AI Concierge dall'inizio alla fine** e per capire
 **cosa manca** per arrivare in produzione. Aggiornata al 2026-07-01, dopo la
 verifica runtime completa su Windows + Docker.
 
-> In breve: il **backend è completo e verificato** (multi-tenant con RLS, RAG,
-> sicurezza widget, chat, prenotazioni). Mancano il **widget frontend**, il
-> **modello LLM reale** e le **integrazioni** (SMTP, PMS) + l'infrastruttura.
+> In breve: **backend e widget sono completi e verificati** (multi-tenant con RLS,
+> RAG, sicurezza, chat, prenotazioni; widget chat "Aria"). Mancano il **modello
+> LLM reale**, le **integrazioni** (SMTP, PMS) e l'**infrastruttura** (Passo 9).
 
 ---
 
@@ -111,10 +111,23 @@ curl -s -X POST $API/api/chat -H "Authorization: Bearer $TOKEN" \
 
 **Note:**
 - `/api/session` senza `X-API-Key` → 401; con `Origin` non autorizzato → 403.
-- `/api/search` e `/api/chat` richiedono **Ollama** (embedding/chat). Senza, gli
-  altri endpoint funzionano lo stesso.
+- `/api/search` e `/api/chat` richiedono **Ollama** (embedding/chat). Senza, tornano
+  **503** (gestito); gli altri endpoint funzionano lo stesso.
 - Chiavi/domini di test sono nel seed (`db/init/02_seed.sql`): `hotel_alpha` usa
   `pk_alpha_dev_0001` con domini `alpha.example.com`, `localhost`.
+
+## 6. Widget frontend "Aria"
+
+```bash
+python -m http.server 5500 --directory widget
+# apri http://localhost:5500  → clicca il pulsante in basso a destra
+```
+
+- **Demo** (default): risposte simulate, **senza backend**. Prova "A che ora è la
+  colazione?", "Avete il parcheggio?", "Vorrei prenotare".
+- **Live** (`http://localhost:5500/?mode=live`): usa l'API reale (backend attivo).
+  Senza Ollama la chat mostra un messaggio d'errore cortese; con Ollama risponde
+  davvero. Dettagli in [`widget/README.md`](../widget/README.md).
 
 ---
 
@@ -127,33 +140,29 @@ curl -s -X POST $API/api/chat -H "Authorization: Bearer $TOKEN" \
 | Suite backend | ✅ 98 passed |
 | Embedding + ricerca su pgvector (fake) + isolamento | ✅ |
 | API vs DB reale: session/rooms/booking + allowlist (403) | ✅ |
+| Widget nel browser: demo (conversazione+fonti) + live (sessione, errori) | ✅ |
 | Ricerca/chat con **modello reale** | ⏳ non testato (Ollama non installato) |
 
 ---
 
 ## Prossimi passi (in ordine di priorità)
 
-### 1. Widget frontend (il pezzo mancante più importante)
-Il componente che vede l'utente non esiste ancora: **Vanilla JS + Shadow DOM**
-(come da architettura), che chiama `/api/session` e poi `/api/chat`. Serve per
-avere il prodotto dimostrabile end-to-end sul sito di un hotel.
-
-### 2. Modello LLM reale
+### 1. Modello LLM reale (richiede un PC più potente — vedi SETUP_NUOVO_PC.md)
 - **Dev:** Ollama (`ollama pull bge-m3` + `ollama pull llama3`), poi provare
-  `/api/search` e `/api/chat` reali.
-- **Prod:** vLLM su GPU (vedi punto 6).
+  `/api/search`, `/api/chat` e il widget in `?mode=live` con risposte vere.
+- **Prod:** vLLM su GPU (vedi punto 5).
 
-### 3. Function calling per la prenotazione
+### 2. Function calling per la prenotazione
 Far sì che sia l'LLM, in conversazione, a raccogliere i dati e invocare la
 creazione della richiesta (oggi l'endpoint `/api/booking` c'è, ma va chiamato
 esplicitamente). Richiede un modello che supporti i tool.
 
-### 4. Integrazioni reali
+### 3. Integrazioni reali
 - **SMTP EU**: sostituire `StubEmailSender` con `SmtpEmailSender` (config via env).
 - **Connettore PMS** del primo hotel: implementare `PMSAdapter` su misura
   (API/channel manager/file), con cache breve su Redis.
 
-### 5. Robustezza per la produzione
+### 4. Robustezza per la produzione
 - **Rate limiter su Redis** (`RedisRateLimiter`) al posto di quello in-memory
   (necessario con più worker/processi).
 - **Passaggio async** del percorso richiesta (psycopg async) se serve throughput.
@@ -163,7 +172,7 @@ esplicitamente). Richiede un modello che supporti i tool.
 - **Segreti**: cambiare `SESSION_SECRET` e le password in produzione.
 - **TTL sessione**: valutare un valore più lungo o un endpoint di refresh (ora 300s).
 
-### 6. Infrastruttura (Passo 9)
+### 5. Infrastruttura (Passo 9)
 - **Dockerfile** per il backend + servizio nel `docker compose` + **Caddy** per
   HTTPS automatico.
 - **Server GPU dedicato EU** (noleggio Hetzner/OVH) con **vLLM**. Decisione da

@@ -1,85 +1,106 @@
-# Backend — pipeline embedding & ricerca semantica (Passo 4)
+# Backend — AI Concierge
 
-Prima base di codice Python del backend: genera gli embedding della knowledge
-base con un modello locale e fa **ricerca semantica** (RAG) con pgvector,
-sempre **isolata per tenant** dalla Row-Level Security.
+Backend Python del progetto: **API FastAPI** che unisce ricerca semantica (RAG),
+sicurezza del widget, chat con memoria, prenotazioni e governance
+anti-allucinazione — tutto **isolato per tenant** dalla Row-Level Security.
 
 ## Struttura
 
 ```
 backend/
 ├── app/
-│   ├── config.py       # settings da env (DB come app_user, Ollama, dim=1024)
-│   ├── db.py           # connect() + tenant_transaction() ← imposta la RLS
+│   ├── config.py       # settings da env (DB, Ollama, sessione, rate limit, CORS)
+│   ├── db.py           # connect() + tenant_transaction()  ← imposta la RLS
+│   ├── vectors.py      # utility pgvector pure (to_pgvector, cosine)
 │   ├── embeddings.py   # Embedder: OllamaEmbedder (reale) + HashEmbedder (offline)
-│   ├── vectors.py      # utility pgvector pure (to_pgvector, cosine) — testabili
-│   └── search.py       # store_embeddings() + semantic_search()
-├── scripts/
-│   ├── generate_embeddings.py   # popola knowledge_base.embedding
-│   └── search_demo.py           # prova la ricerca da CLI
-├── tests/              # unit test offline (nessun DB/modello richiesto)
+│   ├── search.py       # store_embeddings() + semantic_search()
+│   ├── rooms.py        # lettura dati stanza (via tenant_transaction)
+│   ├── sessions.py     # memoria conversazioni (InMemory / Redis, TTL)
+│   ├── llm.py          # adapter LLM: OllamaLLM (reale) + StubLLM (offline)
+│   ├── chat.py         # orchestrazione RAG + storia + LLM (answer)
+│   ├── prompt.py       # system prompt anti-allucinazione + fatti stanza
+│   ├── calc.py         # calcoli deterministici (°C↔K, notti, prezzi)
+│   ├── booking.py      # richiesta di prenotazione (validazione + INSERT)
+│   ├── mailer.py       # invio email reception (Smtp / Stub)
+│   ├── pms.py          # adapter PMS (interfaccia + Null/Fake)
+│   └── api/
+│       ├── deps.py     # dipendenze/sicurezza (provider iniettabili)
+│       └── main.py     # app FastAPI + endpoint
+├── scripts/            # generate_embeddings.py, search_demo.py (CLI)
+├── tests/              # 98 test offline (pytest)
 └── requirements.txt
 ```
 
+## Endpoint (FastAPI)
+
+| Metodo · path | Cosa fa | Auth |
+|---|---|---|
+| `GET /health` | liveness | — |
+| `POST /api/session` | API key + dominio + rate limit → emette **token** | API key + Origin |
+| `POST /api/search` | ricerca semantica (RAG) sulla KB del tenant | token |
+| `GET /api/rooms` · `GET /api/rooms/{n}` | dati stanza | token |
+| `POST /api/chat` | RAG + memoria Redis + LLM (con grounding) | token |
+| `POST /api/booking` | richiesta di prenotazione → email reception | token |
+
+Catena di sicurezza: **API key → tenant → allowlist Origin/Referer → rate limit →
+token di sessione firmato**. Il `tenant_id` viaggia dentro il token.
+
 ## Concetti chiave
 
-- **Isolamento RLS.** Ogni operazione passa da `tenant_transaction(conn, tenant_id)`,
+- **Isolamento RLS.** Ogni accesso ai dati passa da `tenant_transaction(conn, tenant_id)`
   che esegue `set_config('app.current_tenant', <id>, true)` (equivalente
-  parametrizzabile di `SET LOCAL`). La ricerca vede quindi **solo** le schede
-  del tenant corrente.
-- **Embedder intercambiabile.** `OllamaEmbedder` per gli embedding reali (dev),
-  `HashEmbedder` deterministico e offline per testare la pipeline senza modello.
-  Stessa interfaccia → il resto del codice non cambia.
-- **Sync ora, async al Passo 6.** Questa è una pipeline batch: psycopg in
-  modalità sincrona. Il percorso richiesta di FastAPI userà psycopg async con
-  lo **stesso** pattern `set_config`.
+  parametrizzabile di `SET LOCAL`). Il backend si connette come `app_user`
+  (non-superuser), quindi la RLS è **sempre** applicata.
+- **Adapter intercambiabili.** Embedding (`OllamaEmbedder`/`HashEmbedder`) e LLM
+  (`OllamaLLM`/`StubLLM`) hanno la stessa interfaccia: in dev Ollama, in CI/offline
+  gli stub, in prod si potrà usare vLLM senza toccare il resto.
+- **Anti-allucinazione.** Numeri/prezzi/conversioni li calcola `calc.py`; l'IA li
+  riporta soltanto (vedi `prompt.py`).
+- **Provider iniettabili.** Gli endpoint dipendono da provider sostituibili nei
+  test (`app.dependency_overrides`), quindi l'API si testa senza DB/modello.
 
-## Prerequisiti
-
-- Container su: `docker compose up -d` (dalla root del progetto).
-- Embedding reali: [Ollama](https://ollama.com) in esecuzione + modello scaricato:
-  ```bash
-  ollama pull bge-m3
-  ```
-- Dipendenze Python: `pip install -r requirements.txt`.
-
-## Uso
-
-```bash
-cd backend
-
-# 1) genera gli embedding (reale, con Ollama)
-python scripts/generate_embeddings.py hotel_alpha hotel_beta
-
-#    …oppure offline, solo per verificare il plumbing (risultati non sensati):
-python scripts/generate_embeddings.py hotel_alpha --fake
-
-# 2) prova la ricerca
-python scripts/search_demo.py hotel_alpha "a che ora è la colazione?"
-```
-
-## Test
+## Avvio e uso
 
 ```bash
 cd backend
 pip install -r requirements.txt
-pytest
+
+# API HTTP (poi http://localhost:8000/docs)
+uvicorn app.api.main:app --reload
+
+# Pipeline embedding + ricerca (offline con --fake, oppure reale con Ollama)
+python scripts/generate_embeddings.py hotel_alpha hotel_beta --fake
+python scripts/search_demo.py hotel_alpha "a che ora è la colazione?" --fake
 ```
 
-I test sono **offline**: coprono le utility sui vettori e gli embedder
-(HashEmbedder + OllamaEmbedder con trasporto HTTP finto). Non richiedono né il
-database né un modello. La verifica end-to-end (embedding reali + ricerca su
-pgvector) va fatta con Docker + Ollama attivi.
+Prerequisiti runtime: container su (`docker compose up -d` dalla radice); per
+ricerca/chat **reali**, [Ollama](https://ollama.com) con `ollama pull bge-m3` e
+`ollama pull llama3`.
 
-## Variabili d'ambiente (con default dev)
+## Test
+
+```bash
+cd backend && pip install -r requirements.txt && pytest   # atteso: 98 passed
+```
+
+I test sono **offline** (fake/stub, niente DB né modello): vettori, embedder,
+sicurezza (allowlist, token, rate limit), API (TestClient), calcoli, prenotazioni.
+
+## Variabili d'ambiente (default dev in `.env.example`)
 
 | Var | Default | Note |
 |---|---|---|
-| `DB_HOST` | `localhost` | |
-| `POSTGRES_PORT` | `5432` | |
-| `POSTGRES_DB` | `concierge` | |
-| `APP_DB_USER` | `app_user` | ruolo non-superuser (RLS) |
-| `APP_DB_PASSWORD` | `app_dev_only` | da `.env` |
+| `DB_HOST` / `POSTGRES_PORT` / `POSTGRES_DB` | `localhost` / `5432` / `concierge` | |
+| `APP_DB_USER` / `APP_DB_PASSWORD` | `app_user` / `app_dev_only` | ruolo non-superuser (RLS) |
+| `REDIS_HOST` / `REDIS_PORT` | `localhost` / `6379` | memoria conversazioni |
+| `CONVERSATION_TTL_SECONDS` | `3600` | scadenza chat (privacy) |
 | `OLLAMA_URL` | `http://localhost:11434` | |
-| `EMBEDDING_MODEL` | `bge-m3` | |
-| `EMBEDDING_DIM` | `1024` | deve combaciare con `vector(1024)` |
+| `EMBEDDING_MODEL` / `EMBEDDING_DIM` | `bge-m3` / `1024` | deve combaciare con `vector(1024)` |
+| `CHAT_MODEL` | `llama3` | modello chat Ollama |
+| `SESSION_SECRET` | `dev-...` | **in prod: segreto forte** |
+| `SESSION_TTL_SECONDS` | `300` | vita del token di sessione |
+| `RATE_LIMIT` / `RATE_WINDOW_SECONDS` | `60` / `60` | rate limiting |
+| `CORS_ALLOW_ORIGINS` | `*` | origini permesse al browser |
+
+> Nota: gli handler API sono **sincroni** (riuso dei moduli testati); il passaggio
+> ad async psycopg si farà quando serve throughput, con lo stesso pattern `set_config`.
