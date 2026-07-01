@@ -25,6 +25,15 @@ class Settings:
         self.embedding_model: str = os.getenv("EMBEDDING_MODEL", "bge-m3")
         self.embedding_dim: int = int(os.getenv("EMBEDDING_DIM", "1024"))
 
+        # --- Sicurezza widget / API ---
+        # Segreto per firmare i token di sessione. In produzione: valore forte e
+        # segreto via env, MAI il default.
+        self.session_secret: str = os.getenv("SESSION_SECRET", "dev-session-secret-change-me")
+        self.session_ttl_seconds: int = int(os.getenv("SESSION_TTL_SECONDS", "300"))
+        # Rate limiting: richieste max per finestra, per chiave (api_key/IP).
+        self.rate_limit: int = int(os.getenv("RATE_LIMIT", "60"))
+        self.rate_window_seconds: int = int(os.getenv("RATE_WINDOW_SECONDS", "60"))
+
     @property
     def dsn(self) -> str:
         """Connection string per psycopg."""

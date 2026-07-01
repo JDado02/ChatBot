@@ -20,10 +20,12 @@ Realizzato finora (report in [`docs/`](docs/)):
   - pipeline di embedding (modello locale via Ollama) + **ricerca semantica**
     con pgvector, isolata per tenant dalla RLS;
   - **sicurezza widget**: allowlist domini, token di sessione firmati, rate
-    limiting, lookup del tenant dall'API key (tabella `tenants`).
-  - 45 unit test offline.
+    limiting, lookup del tenant dall'API key (tabella `tenants`);
+  - **API FastAPI**: `/api/session` (emette il token) e `/api/search` (RAG),
+    con l'intera catena di sicurezza. Avvio: `uvicorn app.api.main:app --reload`.
+  - 55 test offline.
 
-Prossimo: endpoint **FastAPI** che mettono insieme sicurezza + RAG + sessioni Redis.
+Prossimo: completare l'API (lettura stanze, sessioni Redis, chat con LLM).
 
 ## Requisiti
 
