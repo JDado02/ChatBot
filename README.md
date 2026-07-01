@@ -1,5 +1,7 @@
 # AI Concierge
 
+[![backend-tests](https://github.com/JDado02/ChatBot/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/JDado02/ChatBot/actions/workflows/backend-tests.yml)
+
 Assistente virtuale (chatbot) multi-tenant per hotel e altre attività, self-hosted in Europa (GDPR-first).
 
 Documento di contesto completo: [`docs/AI_Concierge_Contesto_Progetto.md`](docs/AI_Concierge_Contesto_Progetto.md).
