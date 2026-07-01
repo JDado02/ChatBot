@@ -1,6 +1,9 @@
 """
 Invio email alla reception (adapter intercambiabile).
 
+Nota: il modulo si chiama `mailer` (non `email`) per NON ombreggiare il modulo
+standard `email` della libreria Python, usato qui sotto da SmtpEmailSender.
+
 - `StubEmailSender`: NON invia nulla, registra i messaggi in memoria. Per dev/test.
 - `SmtpEmailSender`: invio reale via SMTP (in produzione: servizio email EU).
 
@@ -38,7 +41,7 @@ class SmtpEmailSender:
 
     def send(self, to: str, subject: str, body: str) -> None:
         import smtplib
-        from email.message import EmailMessage
+        from email.message import EmailMessage  # modulo standard, non questo file
 
         msg = EmailMessage()
         msg["From"] = self.sender

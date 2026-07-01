@@ -40,6 +40,10 @@ class Settings:
         # Rate limiting: richieste max per finestra, per chiave (api_key/IP).
         self.rate_limit: int = int(os.getenv("RATE_LIMIT", "60"))
         self.rate_window_seconds: int = int(os.getenv("RATE_WINDOW_SECONDS", "60"))
+        # CORS: origini permesse al browser. Default "*" perché la sicurezza vera
+        # è server-side (allowlist domini + rate limit + token). In produzione si
+        # può restringere. Formato env: lista separata da virgole.
+        self.cors_allow_origins = os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
 
     @property
     def dsn(self) -> str:

@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from app.api import deps
 from app.api.main import app
 from app.booking import BookingInput, create_booking, validate_booking
-from app.email import StubEmailSender, format_booking_email
+from app.mailer import StubEmailSender, format_booking_email
 from app.pms import FakePMS, NullPMS
 from app.security.ratelimit import InMemoryRateLimiter
 

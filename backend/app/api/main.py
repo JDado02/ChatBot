@@ -17,7 +17,8 @@ from __future__ import annotations
 import uuid
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from ..booking import BookingInput
@@ -27,6 +28,17 @@ from ..security.tokens import issue_token
 from . import deps
 
 app = FastAPI(title="AI Concierge API", version="0.1.0")
+
+# CORS: permette al widget (browser, su un dominio diverso) di leggere le
+# risposte. La sicurezza reale resta server-side: l'allowlist dei domini
+# (check_allowlist) rifiuta comunque le richieste da origini non autorizzate.
+# Niente credenziali: si usa il token Bearer, non i cookie.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allow_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
@@ -42,7 +54,6 @@ class SessionResponse(BaseModel):
 
 @app.post("/api/session", response_model=SessionResponse)
 def create_session(
-    request: Request,
     tenant: Tenant = Depends(deps.check_allowlist),
     limiter=Depends(deps.get_rate_limiter),
 ) -> SessionResponse:

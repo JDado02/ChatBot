@@ -99,7 +99,7 @@ def get_booking_service():
     che salva la richiesta e avvisa la reception via email. Fake nei test."""
     from ..booking import create_booking
     from ..db import connect
-    from ..email import StubEmailSender, format_booking_email
+    from ..mailer import StubEmailSender, format_booking_email
     from ..security.tenants import get_tenant_contact
 
     # In dev: StubEmailSender (registra, non invia). In prod: SmtpEmailSender
