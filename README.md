@@ -33,9 +33,13 @@ Realizzato finora (report in [`docs/`](docs/)):
   - adapter per **email** (SMTP/stub) e **PMS** (interfaccia + fake, connettore
     reale su misura per cliente).
   - 98 test offline.
+- **Widget frontend "Aria"** ([`widget/`](widget/README.md)): chat embeddabile
+  Vanilla JS + Shadow DOM, zero dipendenze/risorse esterne (GDPR). Branding
+  dedicato (midnight + oro), integrazione con l'API, persistenza conversazione,
+  modalità demo. Provalo: `python -m http.server 5500 --directory widget`.
 
-Prossimo: verifica runtime (Docker + Ollama), integrazioni reali (LLM tool-calling,
-SMTP, PMS) e infrastruttura (server GPU EU, Passo 9).
+Prossimo: modello LLM reale (Ollama/vLLM), integrazioni (LLM tool-calling, SMTP,
+PMS) e infrastruttura (server GPU EU, Passo 9).
 
 ## Requisiti
 
@@ -86,7 +90,8 @@ docker compose down -v         # ferma e cancella i dati (re-init da zero)
 ├── .env.example
 ├── CLAUDE.md          # regole/flusso per Claude Code (auto-caricato)
 ├── PROGRESS.md        # stato del progetto e roadmap (il "segnalibro")
-├── backend/    # codice Python: embedding + ricerca semantica (RAG)
+├── backend/    # codice Python: API, RAG, sicurezza, prenotazioni, governance
+├── widget/     # widget chat "Aria" (Vanilla JS + Shadow DOM) + pagina demo
 ├── db/
 │   ├── init/   # ruolo app, schema+RLS, dati di test (eseguiti all'avvio)
 │   └── test/   # test di isolamento RLS

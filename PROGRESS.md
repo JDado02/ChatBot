@@ -1,7 +1,7 @@
 # PROGRESS — AI Concierge
 
 **Ultimo aggiornamento:** 2026-07-01
-**Fase attuale:** Passi 1–8 (parte codificabile) fatti e **verificati a runtime** (Docker OK). Restano: widget frontend, LLM reale, integrazioni (SMTP/PMS), infrastruttura (Passo 9). Guida: [docs/GUIDA_TEST_E_PROSSIMI_PASSI.md](docs/GUIDA_TEST_E_PROSSIMI_PASSI.md).
+**Fase attuale:** Passi 1–8 + **widget frontend "Aria"** fatti e verificati (Docker OK, browser OK). Restano: modello LLM reale, integrazioni (SMTP/PMS), infrastruttura (Passo 9). Guida: [docs/GUIDA_TEST_E_PROSSIMI_PASSI.md](docs/GUIDA_TEST_E_PROSSIMI_PASSI.md).
 
 > Segnalibro del progetto. Per riprendere una sessione: **`git pull`**, poi leggi questo file, l'ultimo commit e il report più recente in `docs/`.
 
@@ -17,6 +17,7 @@
   - Passo 7 — **governance**: calcoli deterministici (`calc.py`: °C↔K, notti, prezzi) + system prompt anti-allucinazione (`prompt.py`).
   - Passo 8 — **prenotazioni**: `booking.py` (salva richiesta `pending`), `mailer.py` (adapter + stub), `pms.py` (interfaccia + fake), endpoint `POST /api/booking`.
   - Review — **CORS** per il widget; rinominato `email.py`→`mailer.py`; cleanup.
+- **Widget frontend "Aria"** (`widget/`): chat embeddabile Vanilla JS + Shadow DOM, branding midnight+oro, integrazione API, persistenza conversazione, modalità demo. Testato nel browser.
 - **Test**: **98 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
 
 ## ✅ Verificato a runtime (2026-07-01, Docker OK)
@@ -43,14 +44,14 @@ Come rifare i test: [docs/GUIDA_TEST_E_PROSSIMI_PASSI.md](docs/GUIDA_TEST_E_PROS
 
 ## Prossimo passo
 
-Il backend "offline" è essenzialmente completo (Passi 1–8 nella loro parte codificabile). Le prossime azioni richiedono runtime o decisioni, in ordine consigliato:
+Backend + widget completi e verificati (Docker + browser). Le prossime azioni richiedono un modello, servizi esterni o decisioni:
 
-1. **Verifica runtime end-to-end** (serve Docker funzionante — su questa macchina WSL2 non era pronto):
-   `docker compose down -v && up -d` → test isolamento; `ollama pull bge-m3` + genera embedding + ricerca; `uvicorn app.api.main:app` e provare `/api/session`→`/api/chat`.
-2. **LLM function calling** per la prenotazione: quando c'è un modello attivo (Ollama/vLLM) che supporta i tool, far invocare `create_booking` dalla conversazione.
-3. **SMTP reale** (servizio email EU) al posto di `StubEmailSender` (aggiungere settaggi env + usare `SmtpEmailSender`).
+1. **Modello LLM reale**: `ollama pull bge-m3` e `ollama pull llama3`, poi provare ricerca e chat vere (widget in `?mode=live`). Poi valutare vLLM.
+2. **LLM function calling** per la prenotazione: far invocare `create_booking` dalla conversazione (serve un modello con tool).
+3. **SMTP reale** (servizio email EU) al posto di `StubEmailSender`.
 4. **Connettore PMS del primo hotel reale** — su misura, in sopralluogo.
-5. **Passo 9** — noleggio server GPU EU + vLLM: **decisione utente** (provider, budget).
+5. **Passo 9** — server GPU EU + vLLM: **decisione utente** (provider, budget).
+6. Migliorie widget (vedi [docs/09](docs/09_widget_frontend.md)): streaming risposta, markdown-lite, temi per-hotel, build/minify.
 
 ## Decisioni prese
 
@@ -65,6 +66,7 @@ Il backend "offline" è essenzialmente completo (Passi 1–8 nella loro parte co
 - **2026-07-01** — Passo 8: prenotazione come **richiesta** `pending` (non conferma); email e PMS dietro adapter (stub/fake in dev); `reception_email` per-tenant; RLS anche in scrittura (`WITH CHECK`). [docs/08](docs/08_prenotazioni_pms.md).
 - **2026-07-01** — Fix CRLF: `.gitattributes` con `eol=lf` per `*.sh`/`*.sql` (lo shebang con CRLF rompeva l'init Docker). Cruciale col multi-computer.
 - **2026-07-01** — Review: aggiunto **CORS** (la sicurezza vera resta l'allowlist server-side); `email.py`→`mailer.py` (no shadow dello stdlib); scritta la guida test+roadmap.
+- **2026-07-01** — Widget "Aria": Vanilla JS + **Shadow DOM**, **zero risorse esterne** (GDPR); testo escapato (anti-XSS); persistenza in `sessionStorage`; errori del modello resi **503+CORS** (non 500) per messaggi chiari nel widget. [docs/09](docs/09_widget_frontend.md).
 - **2026-06-18** (dal remoto) — Ruolo `app_user` non-superuser; `FORCE ROW LEVEL SECURITY`; policy `SET LOCAL` + `current_setting(..., true)`. [docs/01](docs/01_setup_docker_database.md).
 
 ## Note / questioni aperte
