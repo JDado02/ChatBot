@@ -137,3 +137,13 @@ CREATE POLICY tenant_isolation ON booking_requests
 GRANT USAGE ON SCHEMA public TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
+
+-- Default privileges: le GRANT qui sopra coprono solo le tabelle/sequenze che
+-- esistono ORA. Questo blocco assicura che anche gli oggetti creati in FUTURO
+-- (es. migrazioni al Passo 6) siano automaticamente accessibili ad app_user,
+-- senza doversi ricordare di rifare la GRANT. Vale per gli oggetti creati dal
+-- ruolo che esegue questo script (il superuser di init/migrazioni).
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO app_user;

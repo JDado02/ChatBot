@@ -7,13 +7,17 @@ Flusso di lavoro e avanzamento: [`CLAUDE.md`](CLAUDE.md) (regole) e [`PROGRESS.m
 
 ## Stato attuale
 
-Realizzato finora (vedi [`docs/01_setup_docker_database.md`](docs/01_setup_docker_database.md)):
+Realizzato finora (report in [`docs/`](docs/)):
 
 - Ambiente locale con **Docker Compose**: PostgreSQL 16 + pgvector, Redis 7.
 - Schema database: tabelle `rooms`, `knowledge_base`, `booking_requests`.
 - Multi-tenancy con **Row-Level Security**: ogni hotel vede solo i propri dati.
 - Ruolo applicativo non-superuser `app_user` (i superuser bypassano la RLS).
-- Dati di test (due hotel fittizi) e test automatico di isolamento.
+- **Dati di test ricchi**: `hotel_alpha` con 30 stanze (dettagli JSONB) + 14 schede
+  di knowledge base; `hotel_beta` piccolo per il contrasto multi-tenant.
+- Test automatico di isolamento RLS (atteso: 4× `PASS`).
+
+Prossimo: pipeline di embedding + ricerca semantica (RAG) con pgvector.
 
 ## Requisiti
 
