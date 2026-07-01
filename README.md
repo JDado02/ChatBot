@@ -16,11 +16,14 @@ Realizzato finora (report in [`docs/`](docs/)):
 - **Dati di test ricchi**: `hotel_alpha` con 30 stanze (dettagli JSONB) + 14 schede
   di knowledge base; `hotel_beta` piccolo per il contrasto multi-tenant.
 - Test automatico di isolamento RLS (atteso: 4× `PASS`).
-- **Backend Python** ([`backend/`](backend/README.md)): pipeline di embedding
-  (modello locale via Ollama) + **ricerca semantica** con pgvector, isolata per
-  tenant dalla RLS. 18 unit test offline.
+- **Backend Python** ([`backend/`](backend/README.md)):
+  - pipeline di embedding (modello locale via Ollama) + **ricerca semantica**
+    con pgvector, isolata per tenant dalla RLS;
+  - **sicurezza widget**: allowlist domini, token di sessione firmati, rate
+    limiting, lookup del tenant dall'API key (tabella `tenants`).
+  - 45 unit test offline.
 
-Prossimo: sicurezza del widget (allowlist domini + rate limiting + token di sessione).
+Prossimo: endpoint **FastAPI** che mettono insieme sicurezza + RAG + sessioni Redis.
 
 ## Requisiti
 

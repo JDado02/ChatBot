@@ -92,6 +92,25 @@ CREATE TABLE booking_requests (
 );
 
 -- =============================================================================
+-- TABELLA: tenants — configurazione/identità degli hotel (API key, domini)
+--
+-- CASO SPECIALE: NON è sotto la Row-Level Security per-tenant. È la tabella di
+-- LOOKUP che, data l'API key ricevuta dal widget, determina QUALE tenant siamo:
+-- va quindi consultata PRIMA di conoscere il tenant (altrimenti chicken-and-egg).
+-- L'API key è PUBBLICA (identifica, non protegge); le difese reali sono
+-- allowlist domini + rate limiting + token di sessione a vita breve.
+-- =============================================================================
+CREATE TABLE tenants (
+    tenant_id       TEXT PRIMARY KEY,        -- es. 'hotel_alpha'
+    name            TEXT NOT NULL,           -- nome leggibile
+    api_key         TEXT NOT NULL UNIQUE,    -- chiave pubblica del widget
+    allowed_domains TEXT[] NOT NULL DEFAULT '{}',  -- domini autorizzati (Origin/Referer)
+    active          BOOLEAN NOT NULL DEFAULT true,
+    created_at      TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX tenants_api_key_idx ON tenants (api_key);
+
+-- =============================================================================
 -- ROW-LEVEL SECURITY
 --
 -- Per ogni tabella:
@@ -147,3 +166,9 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT USAGE, SELECT ON SEQUENCES TO app_user;
+
+-- La tabella 'tenants' è configurazione: il backend deve poterla LEGGERE (per
+-- il lookup dell'API key) ma non modificarla. Least-privilege: revochiamo le
+-- scritture ereditate dalla GRANT generica qui sopra. Il provisioning di un
+-- nuovo hotel (INSERT/UPDATE su tenants) resta compito del superuser/admin.
+REVOKE INSERT, UPDATE, DELETE ON tenants FROM app_user;
