@@ -74,4 +74,6 @@ Il backend "offline" è essenzialmente completo (Passi 1–8 nella loro parte co
 - **Docker su questa macchina**: backend WSL2 non avviabile senza installare una distro (non fatto in autonomia). Verifiche runtime rimandate.
 - **LLM in dev**: la chat (Passo 6/2) userà un adapter per il modello, testato con uno stub finché non c'è vLLM/Ollama.
 - **Sync → async**: gli handler sono sincroni (riuso codice testato); passaggio ad async psycopg quando serve throughput, stesso pattern `set_config`.
+- **CI**: GitHub Action `backend-tests` esegue i 98 test a ogni push. Se non parte, abilitare GitHub Actions nella repo (Settings → Actions).
+- **Settaggi**: nuovi in `.env.example` (SESSION_SECRET, modelli, rate limit, TTL). In prod cambiare `SESSION_SECRET`.
 - Convenzione: a ogni passo aggiornare `PROGRESS.md` + `README.md` e scrivere un report in `docs/0N_*.md`.
