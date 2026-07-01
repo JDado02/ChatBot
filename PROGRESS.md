@@ -1,7 +1,7 @@
 # PROGRESS — AI Concierge
 
 **Ultimo aggiornamento:** 2026-07-01
-**Fase attuale:** Passi 1–6 fatti (backend API completo). In corso: Passo 7 (governance system prompt).
+**Fase attuale:** Passi 1–7 fatti. In corso: Passo 8 (function calling: prenotazioni + PMS).
 
 > Segnalibro del progetto. Per riprendere una sessione: **`git pull`**, poi leggi questo file, l'ultimo commit e il report più recente in `docs/`.
 
@@ -14,7 +14,8 @@
   - Passo 4 — embedding (Ollama/Hash) + ricerca semantica pgvector, isolata per tenant.
   - Passo 5 — sicurezza widget: allowlist, token firmati, rate limit, lookup tenant.
   - Passo 6 — **API FastAPI**: `/health`, `/api/session` (token), `/api/search` (RAG), `/api/rooms`, `/api/chat` (RAG+storia Redis+LLM stub).
-- **Test**: **74 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
+  - Passo 7 — **governance**: calcoli deterministici (`calc.py`: °C↔K, notti, prezzi) + system prompt anti-allucinazione (`prompt.py`).
+- **Test**: **87 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
 
 ## ⚠️ Da verificare al prossimo avvio con Docker (+ Ollama)
 
@@ -39,17 +40,16 @@ uvicorn app.api.main:app --reload    # poi http://localhost:8000/docs
 - [x] **4.** Pipeline embedding + ricerca semantica pgvector
 - [x] **5.** Sicurezza widget: allowlist + rate limiting + token di sessione
 - [x] **6.** Endpoint FastAPI: sicurezza + `/api/search` + `/api/rooms` + `/api/chat` (sessioni Redis, LLM stub)
-- [ ] **7.** System prompt: regole di risposta + dati/calcoli deterministici (prezzi, orari, conversioni)  ← PROSSIMO
-- [ ] **8.** Function calling: richiesta prenotazione (email reception) + adapter PMS del primo hotel
+- [x] **7.** System prompt anti-allucinazione + calcoli deterministici (conversioni, notti, prezzi)
+- [ ] **8.** Function calling: richiesta prenotazione (email reception) + adapter PMS del primo hotel  ← PROSSIMO
 - [ ] **9.** Server GPU dedicato EU (noleggio iniziale) con vLLM
 
 ## Prossimo passo
 
-**Passo 7 — governance delle risposte (anti-allucinazione):**
-1. Rifinire il **system prompt** con regole complete + esempi (già una base in `backend/app/chat.py`).
-2. Spostare nel backend i **dati/calcoli deterministici** (prezzi, orari, conversioni °C↔K) così l'IA li riporta soltanto.
-3. Integrare nel contesto della chat anche i **dati stanza** precisi (da `rooms`), non solo le schede RAG.
-Testabile offline (costruzione prompt + funzioni di calcolo) come i passi precedenti.
+**Passo 8 — function calling:**
+1. **Richiesta di prenotazione**: salvataggio in `booking_requests` (via `tenant_transaction`) + **email alla reception** dietro un adapter (stub in dev, SMTP EU in prod). Endpoint `POST /api/booking`. Testabile offline con email-stub.
+2. **Adapter PMS**: interfaccia comune (`get_disponibilita`, `get_prezzo`) con connettore su misura per il primo hotel; cache breve su Redis. Iniziare con un adapter finto/manuale.
+Nota: parte codificabile/testabile offline (booking + email stub); il PMS reale è "su misura per cliente" e richiede dati del cliente.
 
 ## Decisioni prese
 
@@ -60,6 +60,7 @@ Testabile offline (costruzione prompt + funzioni di calcolo) come i passi preced
 - **2026-07-01** — Passo 5: tabella `tenants` **fuori** dalla RLS (lookup API key), `app_user` solo SELECT; token HMAC senza dipendenze; allowlist **fail-closed**. [docs/04](docs/04_sicurezza_widget.md).
 - **2026-07-01** — Passo 6/1: endpoint con **provider iniettabili** (test via `dependency_overrides`, senza DB/modello); handler sincroni che riusano i moduli testati; il `tenant_id` viaggia dentro il token firmato. [docs/05](docs/05_api_fastapi.md).
 - **2026-07-01** — Passo 6/2: `answer()` della chat disaccoppiato dal DB (riceve `search_fn`) → orchestrazione testabile offline; `session_id` preso dal token firmato; sessioni Redis con TTL (GDPR); LLM dietro adapter (Stub/Ollama). [docs/06](docs/06_api_chat_sessioni.md).
+- **2026-07-01** — Passo 7: calcoli deterministici in `calc.py` (l'IA non calcola nulla); regole+prompt in `prompt.py`; conversione °C→K già pronta nei fatti stanza. [docs/07](docs/07_governance_risposte.md).
 - **2026-06-18** (dal remoto) — Ruolo `app_user` non-superuser; `FORCE ROW LEVEL SECURITY`; policy `SET LOCAL` + `current_setting(..., true)`. [docs/01](docs/01_setup_docker_database.md).
 
 ## Note / questioni aperte

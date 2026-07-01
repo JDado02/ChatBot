@@ -23,10 +23,12 @@ Realizzato finora (report in [`docs/`](docs/)):
     limiting, lookup del tenant dall'API key (tabella `tenants`);
   - **API FastAPI**: `/api/session` (token), `/api/search` (RAG), `/api/rooms`
     (dati stanza) e `/api/chat` (RAG + memoria Redis + LLM), con l'intera catena
-    di sicurezza. Avvio: `uvicorn app.api.main:app --reload`.
-  - 74 test offline.
+    di sicurezza. Avvio: `uvicorn app.api.main:app --reload`;
+  - **anti-allucinazione**: calcoli deterministici (conversioni °C↔K, notti,
+    prezzi) fatti dal backend + system prompt con regole di grounding.
+  - 87 test offline.
 
-Prossimo: governance delle risposte (system prompt anti-allucinazione + dati/calcoli deterministici).
+Prossimo: function calling (richiesta di prenotazione + adapter PMS).
 
 ## Requisiti
 
