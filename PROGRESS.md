@@ -1,7 +1,7 @@
 # PROGRESS — AI Concierge
 
 **Ultimo aggiornamento:** 2026-07-01
-**Fase attuale:** Passi 1–5 fatti; Passo 6 **parte 1** (API sicurezza + ricerca) fatta. In corso: Passo 6 parte 2.
+**Fase attuale:** Passi 1–6 fatti (backend API completo). In corso: Passo 7 (governance system prompt).
 
 > Segnalibro del progetto. Per riprendere una sessione: **`git pull`**, poi leggi questo file, l'ultimo commit e il report più recente in `docs/`.
 
@@ -13,8 +13,8 @@
 - **Backend Python** (`backend/`):
   - Passo 4 — embedding (Ollama/Hash) + ricerca semantica pgvector, isolata per tenant.
   - Passo 5 — sicurezza widget: allowlist, token firmati, rate limit, lookup tenant.
-  - Passo 6 (in corso) — **API FastAPI**: `/health`, `/api/session` (token), `/api/search` (RAG), `/api/rooms` (lettura stanze).
-- **Test**: **60 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
+  - Passo 6 — **API FastAPI**: `/health`, `/api/session` (token), `/api/search` (RAG), `/api/rooms`, `/api/chat` (RAG+storia Redis+LLM stub).
+- **Test**: **74 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
 
 ## ⚠️ Da verificare al prossimo avvio con Docker (+ Ollama)
 
@@ -38,17 +38,18 @@ uvicorn app.api.main:app --reload    # poi http://localhost:8000/docs
 - [x] **3.** Dati di test: 30 stanze (JSONB) + knowledge base — da caricare (`down -v`)
 - [x] **4.** Pipeline embedding + ricerca semantica pgvector
 - [x] **5.** Sicurezza widget: allowlist + rate limiting + token di sessione
-- [~] **6.** Endpoint FastAPI — fatti: sicurezza + `/api/search` + `/api/rooms`; manca: sessioni Redis, chat LLM  ← IN CORSO
-- [ ] **7.** System prompt: regole di risposta + dati/calcoli deterministici (prezzi, orari, conversioni)
+- [x] **6.** Endpoint FastAPI: sicurezza + `/api/search` + `/api/rooms` + `/api/chat` (sessioni Redis, LLM stub)
+- [ ] **7.** System prompt: regole di risposta + dati/calcoli deterministici (prezzi, orari, conversioni)  ← PROSSIMO
 - [ ] **8.** Function calling: richiesta prenotazione (email reception) + adapter PMS del primo hotel
 - [ ] **9.** Server GPU dedicato EU (noleggio iniziale) con vLLM
 
 ## Prossimo passo
 
-**Passo 6, parte 2:**
-1. **Lettura stanze** — endpoint per i dati strutturati delle camere (via `tenant_transaction`).
-2. **Sessioni conversazione su Redis** — storia chat con chiave `tenant_id:session_id` + TTL.
-3. **Chat con LLM** — endpoint `/api/chat` con la chiamata al modello dietro un **adapter** (come per gli embedding), stub finché non c'è vLLM/Ollama. Qui vanno le regole anti-allucinazione (system prompt + grounding su dati RAG e dati stanza; numeri/orari/conversioni calcolati dal backend).
+**Passo 7 — governance delle risposte (anti-allucinazione):**
+1. Rifinire il **system prompt** con regole complete + esempi (già una base in `backend/app/chat.py`).
+2. Spostare nel backend i **dati/calcoli deterministici** (prezzi, orari, conversioni °C↔K) così l'IA li riporta soltanto.
+3. Integrare nel contesto della chat anche i **dati stanza** precisi (da `rooms`), non solo le schede RAG.
+Testabile offline (costruzione prompt + funzioni di calcolo) come i passi precedenti.
 
 ## Decisioni prese
 
@@ -58,6 +59,7 @@ uvicorn app.api.main:app --reload    # poi http://localhost:8000/docs
 - **2026-07-01** — Passo 4: backend **sincrono** per la pipeline; embedder come **adapter**; isolamento via `tenant_transaction`. [docs/03](docs/03_embedding_ricerca_semantica.md).
 - **2026-07-01** — Passo 5: tabella `tenants` **fuori** dalla RLS (lookup API key), `app_user` solo SELECT; token HMAC senza dipendenze; allowlist **fail-closed**. [docs/04](docs/04_sicurezza_widget.md).
 - **2026-07-01** — Passo 6/1: endpoint con **provider iniettabili** (test via `dependency_overrides`, senza DB/modello); handler sincroni che riusano i moduli testati; il `tenant_id` viaggia dentro il token firmato. [docs/05](docs/05_api_fastapi.md).
+- **2026-07-01** — Passo 6/2: `answer()` della chat disaccoppiato dal DB (riceve `search_fn`) → orchestrazione testabile offline; `session_id` preso dal token firmato; sessioni Redis con TTL (GDPR); LLM dietro adapter (Stub/Ollama). [docs/06](docs/06_api_chat_sessioni.md).
 - **2026-06-18** (dal remoto) — Ruolo `app_user` non-superuser; `FORCE ROW LEVEL SECURITY`; policy `SET LOCAL` + `current_setting(..., true)`. [docs/01](docs/01_setup_docker_database.md).
 
 ## Note / questioni aperte

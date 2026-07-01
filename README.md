@@ -21,11 +21,12 @@ Realizzato finora (report in [`docs/`](docs/)):
     con pgvector, isolata per tenant dalla RLS;
   - **sicurezza widget**: allowlist domini, token di sessione firmati, rate
     limiting, lookup del tenant dall'API key (tabella `tenants`);
-  - **API FastAPI**: `/api/session` (emette il token) e `/api/search` (RAG),
-    con l'intera catena di sicurezza. Avvio: `uvicorn app.api.main:app --reload`.
-  - 55 test offline.
+  - **API FastAPI**: `/api/session` (token), `/api/search` (RAG), `/api/rooms`
+    (dati stanza) e `/api/chat` (RAG + memoria Redis + LLM), con l'intera catena
+    di sicurezza. Avvio: `uvicorn app.api.main:app --reload`.
+  - 74 test offline.
 
-Prossimo: completare l'API (lettura stanze, sessioni Redis, chat con LLM).
+Prossimo: governance delle risposte (system prompt anti-allucinazione + dati/calcoli deterministici).
 
 ## Requisiti
 

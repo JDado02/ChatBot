@@ -2,7 +2,8 @@
 fastapi>=0.110            # API HTTP (endpoint sicurezza + ricerca + chat)
 uvicorn[standard]>=0.29   # server ASGI per lo sviluppo (uvicorn app.api.main:app)
 psycopg[binary]>=3.1      # driver PostgreSQL
-httpx>=0.27               # client HTTP verso Ollama (embedding)
+redis>=5.0                # memoria conversazioni (sessioni con TTL)
+httpx>=0.27               # client HTTP verso Ollama (embedding + chat)
 
 # --- Dev / test ---
 pytest>=8.0

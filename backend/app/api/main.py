@@ -130,3 +130,28 @@ def rooms_get(
     if room is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "stanza non trovata")
     return RoomOut(**vars(room))
+
+
+# --- /api/chat --------------------------------------------------------------
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    sources: List[str]
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+def chat(
+    body: ChatRequest,
+    session: dict = Depends(deps.require_session),
+    chat_service=Depends(deps.get_chat_service),
+    limiter=Depends(deps.get_rate_limiter),
+) -> ChatResponse:
+    tenant_id = session["tenant_id"]
+    deps.enforce_rate_limit(f"chat:{tenant_id}", limiter)
+    # Il session_id della conversazione è quello dentro il token (sid): così la
+    # storia è legata alla sessione emessa, non a un input arbitrario del client.
+    result = chat_service(tenant_id, session["sid"], body.message)
+    return ChatResponse(reply=result.reply, sources=result.sources)

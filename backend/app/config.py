@@ -20,10 +20,17 @@ class Settings:
         self.db_user: str = os.getenv("APP_DB_USER", "app_user")
         self.db_password: str = os.getenv("APP_DB_PASSWORD", "app_dev_only")
 
-        # --- Modello di embedding locale (dev via Ollama) ---
+        # --- Modelli locali (dev via Ollama) ---
         self.ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
         self.embedding_model: str = os.getenv("EMBEDDING_MODEL", "bge-m3")
         self.embedding_dim: int = int(os.getenv("EMBEDDING_DIM", "1024"))
+        self.chat_model: str = os.getenv("CHAT_MODEL", "llama3")
+
+        # --- Redis (memoria conversazioni) ---
+        self.redis_host: str = os.getenv("REDIS_HOST", "localhost")
+        self.redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
+        # Le conversazioni scadono da sole (TTL): privacy + niente accumulo.
+        self.conversation_ttl_seconds: int = int(os.getenv("CONVERSATION_TTL_SECONDS", "3600"))
 
         # --- Sicurezza widget / API ---
         # Segreto per firmare i token di sessione. In produzione: valore forte e

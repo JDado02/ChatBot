@@ -65,6 +65,35 @@ def get_room_reader():
     return _Reader()
 
 
+def get_chat_service():
+    """Ritorna una funzione (tenant_id, session_id, message) -> ChatReply che
+    orchestra RAG + memoria Redis + LLM. Nei test si sostituisce con un fake."""
+    from ..chat import answer
+    from ..db import connect
+    from ..embeddings import build_default_embedder
+    from ..llm import OllamaLLM
+    from ..search import semantic_search
+    from ..sessions import RedisSessionStore
+
+    embedder = build_default_embedder(settings)
+    llm = OllamaLLM(settings.ollama_url, settings.chat_model)
+
+    def search_fn(tenant_id: str, query: str, k: int):
+        with connect() as conn:
+            return semantic_search(conn, tenant_id, query, embedder, k=k)
+
+    def service(tenant_id: str, session_id: str, message: str):
+        import redis  # dipendenza runtime (lazy)
+
+        r = redis.Redis(
+            host=settings.redis_host, port=settings.redis_port, decode_responses=True
+        )
+        store = RedisSessionStore(r, ttl_seconds=settings.conversation_ttl_seconds)
+        return answer(search_fn, store, llm, tenant_id, session_id, message)
+
+    return service
+
+
 _rate_limiter = InMemoryRateLimiter(settings.rate_limit, settings.rate_window_seconds)
 
 
