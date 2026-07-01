@@ -260,7 +260,17 @@
   };
 
   // --------------------------------- Stato ---------------------------------
-  var state = { open: false, token: null, sending: false, greeted: false };
+  var state = { open: false, token: null, sending: false, greeted: false, history: [] };
+
+  // Storia conversazione in sessionStorage: sopravvive alla navigazione tra le
+  // pagine del sito, si azzera alla chiusura della scheda (privacy).
+  var HKEY = "aria_hist_" + (cfg.apiKey || "x");
+  function persist() {
+    try { sessionStorage.setItem(HKEY, JSON.stringify(state.history.slice(-40))); } catch (e) {}
+  }
+  function restore() {
+    try { return JSON.parse(sessionStorage.getItem(HKEY) || "[]"); } catch (e) { return []; }
+  }
 
   // --------------------------------- Helpers UI ---------------------------------
   function esc(s) {
@@ -270,7 +280,7 @@
   }
   function scrollDown() { el.body.scrollTop = el.body.scrollHeight; }
 
-  function addMessage(role, text, sources) {
+  function addMessage(role, text, sources, store) {
     var msg = document.createElement("div");
     msg.className = "aria-msg " + role;
     var inner = "";
@@ -285,6 +295,10 @@
     msg.innerHTML = inner;
     el.body.appendChild(msg);
     scrollDown();
+    if (store !== false) {
+      state.history.push({ role: role, text: text, sources: sources || [] });
+      persist();
+    }
     return msg;
   }
 
@@ -428,8 +442,15 @@
     state.open = true; wrap.classList.add("open");
     if (!state.greeted) {
       state.greeted = true;
-      addMessage("bot", cfg.greeting);
-      addSuggestions();
+      var prev = restore();
+      if (prev.length) {
+        // ripristina la conversazione precedente (senza ri-salvarla)
+        state.history = prev;
+        prev.forEach(function (m) { addMessage(m.role, m.text, m.sources, false); });
+      } else {
+        addMessage("bot", cfg.greeting);
+        addSuggestions();
+      }
     }
     setTimeout(function () { el.input.focus(); }, 240);
   }
