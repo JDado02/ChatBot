@@ -5,6 +5,7 @@ name: backend-tests
 on:
   push:
   pull_request:
+  workflow_dispatch:   # permette l'avvio manuale dal tab Actions
 
 jobs:
   pytest:
