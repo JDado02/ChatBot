@@ -16,8 +16,11 @@ Realizzato finora (report in [`docs/`](docs/)):
 - **Dati di test ricchi**: `hotel_alpha` con 30 stanze (dettagli JSONB) + 14 schede
   di knowledge base; `hotel_beta` piccolo per il contrasto multi-tenant.
 - Test automatico di isolamento RLS (atteso: 4× `PASS`).
+- **Backend Python** ([`backend/`](backend/README.md)): pipeline di embedding
+  (modello locale via Ollama) + **ricerca semantica** con pgvector, isolata per
+  tenant dalla RLS. 18 unit test offline.
 
-Prossimo: pipeline di embedding + ricerca semantica (RAG) con pgvector.
+Prossimo: sicurezza del widget (allowlist domini + rate limiting + token di sessione).
 
 ## Requisiti
 
@@ -68,6 +71,7 @@ docker compose down -v         # ferma e cancella i dati (re-init da zero)
 ├── .env.example
 ├── CLAUDE.md          # regole/flusso per Claude Code (auto-caricato)
 ├── PROGRESS.md        # stato del progetto e roadmap (il "segnalibro")
+├── backend/    # codice Python: embedding + ricerca semantica (RAG)
 ├── db/
 │   ├── init/   # ruolo app, schema+RLS, dati di test (eseguiti all'avvio)
 │   └── test/   # test di isolamento RLS
