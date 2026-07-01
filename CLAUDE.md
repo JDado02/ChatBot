@@ -17,7 +17,7 @@ AI Concierge — un chatbot SaaS **multi-tenant** (caso d'uso principale: hotel)
 
 Il vincolo reale è il **budget token** (piano Claude Pro). Obiettivo: ogni sessione deve poter ripartire da zero leggendo i file del repo, **senza rispiegazioni a voce**.
 
-1. **A inizio sessione:** leggi prima `PROGRESS.md`. Dice dove siamo e qual è il prossimo passo.
+1. **A inizio sessione:** fai **prima `git pull`** — il progetto viene portato avanti da **più computer**, quindi il remoto GitHub è la fonte di verità e il locale può essere indietro. Poi leggi `PROGRESS.md`: dice dove siamo e qual è il prossimo passo. (Analogamente, a fine sessione fai sempre `git push`.)
 2. **Un blocco alla volta:** un **singolo passo della roadmap** per volta, in autonomia, fino a completarlo. Un solo agente in sequenza — niente sciami di agenti in parallelo (bruciano token e rischiano incoerenza sui vincoli trasversali).
 3. **Commit piccoli e frequenti**, messaggio chiaro. _Ultimo commit + `PROGRESS.md` = il segnalibro._
 4. **Alla fine di ogni passo:** aggiorna `PROGRESS.md` (stato + prossimo passo + decisioni), aggiorna `README.md` se lo stato è cambiato, e scrivi un breve **report in `docs/0N_*.md`**. Fallo **prima** di finire i token, non dopo. Ricordalo tu stesso all'utente quando la sessione si allunga.
