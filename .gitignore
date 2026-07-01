@@ -1,6 +1,42 @@
-# Segreti / configurazione locale
+# === Segreti e configurazione locale (MAI committare) ===
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
 
-# Volumi/dati locali eventuali
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# === Node / Widget ===
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+
+# === Docker / dati locali ===
+# volumi e dump del DB montati localmente
+pgdata/
+redis-data/
+*.dump
 *.log
+
+# === IDE / OS ===
 .idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
