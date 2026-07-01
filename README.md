@@ -3,6 +3,7 @@
 Assistente virtuale (chatbot) multi-tenant per hotel e altre attività, self-hosted in Europa (GDPR-first).
 
 Documento di contesto completo: [`docs/AI_Concierge_Contesto_Progetto.md`](docs/AI_Concierge_Contesto_Progetto.md).
+Flusso di lavoro e avanzamento: [`CLAUDE.md`](CLAUDE.md) (regole) e [`PROGRESS.md`](PROGRESS.md) (roadmap e stato).
 
 ## Stato attuale
 
@@ -61,6 +62,8 @@ docker compose down -v         # ferma e cancella i dati (re-init da zero)
 .
 ├── docker-compose.yml
 ├── .env.example
+├── CLAUDE.md          # regole/flusso per Claude Code (auto-caricato)
+├── PROGRESS.md        # stato del progetto e roadmap (il "segnalibro")
 ├── db/
 │   ├── init/   # ruolo app, schema+RLS, dati di test (eseguiti all'avvio)
 │   └── test/   # test di isolamento RLS

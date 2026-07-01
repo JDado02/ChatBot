@@ -1,19 +1,23 @@
 # PROGRESS — AI Concierge
 
 **Ultimo aggiornamento:** 2026-07-01
-**Fase attuale:** Setup del flusso di lavoro completato. Nessun codice applicativo ancora scritto.
+**Fase attuale:** Passi 1–2 completati e verificati. Prossimo: Passo 3–4.
 
-> Questo file è il **segnalibro** del progetto. Per riprendere una sessione: leggi questo file, poi guarda l'ultimo commit git. Non serve altro.
+> Segnalibro del progetto. Per riprendere una sessione: leggi questo file, poi guarda l'ultimo commit git e il report più recente in `docs/`. Non serve altro.
 
 ## Stato in breve
 
-- Repo con la documentazione di architettura ([AI_Concierge_Contesto_Progetto.md](AI_Concierge_Contesto_Progetto.md)) + file di workflow ([CLAUDE.md](CLAUDE.md), questo file).
-- **In attesa del "via" dell'utente** per iniziare l'implementazione (Passo 1).
+- **Ambiente Docker** attivo: PostgreSQL 16 + pgvector, Redis 7 (`docker-compose.yml`).
+- **Schema DB** con le 3 tabelle (`rooms`, `knowledge_base`, `booking_requests`) e **RLS multi-tenant** attiva (`db/init/`).
+- Ruolo backend **non-superuser `app_user`** (i superuser bypassano la RLS).
+- **Seed minimo** per i test: 2 hotel fittizi (`hotel_alpha`, `hotel_beta`) — NON ancora il seed ricco del Passo 3.
+- **Test isolamento RLS**: 4/4 PASS (report in [docs/01_setup_docker_database.md](docs/01_setup_docker_database.md)).
+- File di workflow (`CLAUDE.md`, `PROGRESS.md`) + `README.md` in repo.
 
 ## Roadmap (sez. 14 del documento di architettura)
 
-- [ ] **1.** Ambiente locale con Docker Compose: PostgreSQL + pgvector + Redis
-- [ ] **2.** Attivare RLS sulle tabelle + test isolamento tra 2 hotel fittizi e sessioni simultanee
+- [x] **1.** Ambiente locale Docker Compose: PostgreSQL + pgvector + Redis
+- [x] **2.** RLS sulle tabelle + test isolamento tra hotel e sessioni — ✅ verificato (4/4 PASS)
 - [ ] **3.** Dati di test: 30 stanze fittizie (con JSONB) + knowledge base d'esempio
 - [ ] **4.** Pipeline di embedding (modello locale) + ricerca semantica con pgvector
 - [ ] **5.** Sicurezza widget: allowlist domini + rate limiting + token di sessione
@@ -24,12 +28,15 @@
 
 ## Prossimo passo
 
-**Passo 1** — ambiente Docker locale (PostgreSQL + pgvector, Redis). In attesa del via dell'utente.
+**Passo 3–4:** popolare dati di test ricchi (30 stanze con JSONB + knowledge base d'esempio) e implementare la **pipeline di embedding** (modello locale) con la **ricerca semantica** via pgvector. In attesa del via dell'utente.
 
 ## Decisioni prese
 
-- **2026-07-01** — Flusso di lavoro a **singolo agente**, "autonomia a blocchi" (un passo della roadmap alla volta), **no multi-agente**. Motivo: budget token (piano Pro) e coerenza sui vincoli trasversali (RLS, GDPR, multi-tenant). Stato tracciato in `PROGRESS.md` + commit piccoli e frequenti.
+- **2026-07-01** — Flusso a **singolo agente**, "autonomia a blocchi" (un passo alla volta), no multi-agente. Motivo: budget token (piano Pro) e coerenza sui vincoli trasversali. Stato tracciato in `PROGRESS.md` + commit piccoli.
+- **2026-07-01** — Integrato con rebase il lavoro pre-esistente sul remoto (Passi 1–2, commit `80c4b79`/`7ea9ed8`). Ruoli file chiariti: `CLAUDE.md`=regole, `PROGRESS.md`=stato/roadmap, `README.md`=panoramica pubblica, `docs/`=architettura + report per-passo.
+- **2026-06-18** (dal remoto) — Ruolo `app_user` non-superuser per far valere la RLS; `FORCE ROW LEVEL SECURITY`; policy con `SET LOCAL` + `current_setting(..., true)` fail-safe. Dettagli in [docs/01_setup_docker_database.md](docs/01_setup_docker_database.md).
 
 ## Note / questioni aperte
 
-- _(nessuna per ora)_
+- Il seed attuale è **minimo** (solo per i test di isolamento). Il seed ricco (30 stanze + KB) è il Passo 3.
+- Convenzione: a ogni passo aggiornare `PROGRESS.md` + `README.md` e scrivere un report in `docs/0N_*.md`.
