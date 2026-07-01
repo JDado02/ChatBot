@@ -103,6 +103,7 @@ CREATE TABLE booking_requests (
 CREATE TABLE tenants (
     tenant_id       TEXT PRIMARY KEY,        -- es. 'hotel_alpha'
     name            TEXT NOT NULL,           -- nome leggibile
+    reception_email TEXT,                    -- destinatario delle richieste di prenotazione
     api_key         TEXT NOT NULL UNIQUE,    -- chiave pubblica del widget
     allowed_domains TEXT[] NOT NULL DEFAULT '{}',  -- domini autorizzati (Origin/Referer)
     active          BOOLEAN NOT NULL DEFAULT true,

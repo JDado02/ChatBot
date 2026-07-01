@@ -201,9 +201,9 @@ VALUES
 -- TENANTS (identità hotel: API key pubblica + domini autorizzati). Valori DEV.
 -- 'localhost' è incluso per poter provare il widget in locale.
 -- ---------------------------------------------------------------------------
-INSERT INTO tenants (tenant_id, name, api_key, allowed_domains, active)
+INSERT INTO tenants (tenant_id, name, reception_email, api_key, allowed_domains, active)
 VALUES
-  ('hotel_alpha', 'Hotel Alpha', 'pk_alpha_dev_0001',
+  ('hotel_alpha', 'Hotel Alpha', 'reception@alpha.example.com', 'pk_alpha_dev_0001',
    ARRAY['alpha.example.com', 'www.alpha.example.com', 'localhost'], true),
-  ('hotel_beta', 'Hotel Beta', 'pk_beta_dev_0002',
+  ('hotel_beta', 'Hotel Beta', 'reception@beta.example.com', 'pk_beta_dev_0002',
    ARRAY['beta.example.com', 'localhost'], true);

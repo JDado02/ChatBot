@@ -20,6 +20,7 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
+from ..booking import BookingInput
 from ..config import settings
 from ..security.tenants import Tenant
 from ..security.tokens import issue_token
@@ -155,3 +156,51 @@ def chat(
     # storia è legata alla sessione emessa, non a un input arbitrario del client.
     result = chat_service(tenant_id, session["sid"], body.message)
     return ChatResponse(reply=result.reply, sources=result.sources)
+
+
+# --- /api/booking -----------------------------------------------------------
+class BookingBody(BaseModel):
+    guest_name: str = Field(min_length=1, max_length=120)
+    guest_email: str = Field(min_length=3, max_length=160)
+    check_in: str
+    check_out: str
+    num_guests: int = Field(ge=1, le=20)
+    guest_phone: Optional[str] = Field(default=None, max_length=40)
+    room_type: Optional[str] = Field(default=None, max_length=50)
+    notes: Optional[str] = Field(default=None, max_length=1000)
+
+
+class BookingResponse(BaseModel):
+    booking_id: int
+    status: str
+    message: str
+
+
+@app.post("/api/booking", response_model=BookingResponse)
+def create_booking_endpoint(
+    body: BookingBody,
+    session: dict = Depends(deps.require_session),
+    booking_service=Depends(deps.get_booking_service),
+    limiter=Depends(deps.get_rate_limiter),
+) -> BookingResponse:
+    tenant_id = session["tenant_id"]
+    deps.enforce_rate_limit(f"booking:{tenant_id}", limiter)
+    booking = BookingInput(
+        guest_name=body.guest_name,
+        guest_email=body.guest_email,
+        check_in=body.check_in,
+        check_out=body.check_out,
+        num_guests=body.num_guests,
+        guest_phone=body.guest_phone,
+        room_type=body.room_type,
+        notes=body.notes,
+    )
+    try:
+        booking_id = booking_service(tenant_id, session["sid"], booking)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
+    return BookingResponse(
+        booking_id=booking_id,
+        status="pending",
+        message="Richiesta inviata alla reception. Riceverai conferma via email.",
+    )

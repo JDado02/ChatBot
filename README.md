@@ -22,13 +22,17 @@ Realizzato finora (report in [`docs/`](docs/)):
   - **sicurezza widget**: allowlist domini, token di sessione firmati, rate
     limiting, lookup del tenant dall'API key (tabella `tenants`);
   - **API FastAPI**: `/api/session` (token), `/api/search` (RAG), `/api/rooms`
-    (dati stanza) e `/api/chat` (RAG + memoria Redis + LLM), con l'intera catena
-    di sicurezza. Avvio: `uvicorn app.api.main:app --reload`;
+    (dati stanza), `/api/chat` (RAG + memoria Redis + LLM) e `/api/booking`
+    (richiesta di prenotazione → email reception), con l'intera catena di
+    sicurezza. Avvio: `uvicorn app.api.main:app --reload`;
   - **anti-allucinazione**: calcoli deterministici (conversioni °C↔K, notti,
-    prezzi) fatti dal backend + system prompt con regole di grounding.
-  - 87 test offline.
+    prezzi) fatti dal backend + system prompt con regole di grounding;
+  - adapter per **email** (SMTP/stub) e **PMS** (interfaccia + fake, connettore
+    reale su misura per cliente).
+  - 98 test offline.
 
-Prossimo: function calling (richiesta di prenotazione + adapter PMS).
+Prossimo: verifica runtime (Docker + Ollama), integrazioni reali (LLM tool-calling,
+SMTP, PMS) e infrastruttura (server GPU EU, Passo 9).
 
 ## Requisiti
 

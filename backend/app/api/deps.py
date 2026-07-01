@@ -94,6 +94,32 @@ def get_chat_service():
     return service
 
 
+def get_booking_service():
+    """Ritorna una funzione (tenant_id, session_id, BookingInput) -> booking_id
+    che salva la richiesta e avvisa la reception via email. Fake nei test."""
+    from ..booking import create_booking
+    from ..db import connect
+    from ..email import StubEmailSender, format_booking_email
+    from ..security.tenants import get_tenant_contact
+
+    # In dev: StubEmailSender (registra, non invia). In prod: SmtpEmailSender
+    # configurato via env (vedi email.py). Sostituibile nei test.
+    sender = StubEmailSender()
+
+    def service(tenant_id: str, session_id: str, booking):
+        with connect() as conn:
+            booking_id = create_booking(conn, tenant_id, session_id, booking)
+            contact = get_tenant_contact(conn, tenant_id)
+        name = contact[0] if contact else tenant_id
+        reception_email = contact[1] if contact else None
+        if reception_email:
+            subject, body = format_booking_email(name, booking, booking_id)
+            sender.send(reception_email, subject, body)
+        return booking_id
+
+    return service
+
+
 _rate_limiter = InMemoryRateLimiter(settings.rate_limit, settings.rate_window_seconds)
 
 

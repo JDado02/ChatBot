@@ -1,7 +1,7 @@
 # PROGRESS — AI Concierge
 
 **Ultimo aggiornamento:** 2026-07-01
-**Fase attuale:** Passi 1–7 fatti. In corso: Passo 8 (function calling: prenotazioni + PMS).
+**Fase attuale:** Passi 1–7 fatti; Passo 8 parte codificabile fatta. Backend "offline" essenzialmente completo. Restano: verifiche runtime + integrazioni reali (modello LLM, SMTP, PMS) + Passo 9 (infra).
 
 > Segnalibro del progetto. Per riprendere una sessione: **`git pull`**, poi leggi questo file, l'ultimo commit e il report più recente in `docs/`.
 
@@ -15,7 +15,8 @@
   - Passo 5 — sicurezza widget: allowlist, token firmati, rate limit, lookup tenant.
   - Passo 6 — **API FastAPI**: `/health`, `/api/session` (token), `/api/search` (RAG), `/api/rooms`, `/api/chat` (RAG+storia Redis+LLM stub).
   - Passo 7 — **governance**: calcoli deterministici (`calc.py`: °C↔K, notti, prezzi) + system prompt anti-allucinazione (`prompt.py`).
-- **Test**: **87 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
+  - Passo 8 — **prenotazioni**: `booking.py` (salva richiesta `pending`), `email.py` (adapter + stub), `pms.py` (interfaccia + fake), endpoint `POST /api/booking`.
+- **Test**: **98 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
 
 ## ⚠️ Da verificare al prossimo avvio con Docker (+ Ollama)
 
@@ -41,15 +42,19 @@ uvicorn app.api.main:app --reload    # poi http://localhost:8000/docs
 - [x] **5.** Sicurezza widget: allowlist + rate limiting + token di sessione
 - [x] **6.** Endpoint FastAPI: sicurezza + `/api/search` + `/api/rooms` + `/api/chat` (sessioni Redis, LLM stub)
 - [x] **7.** System prompt anti-allucinazione + calcoli deterministici (conversioni, notti, prezzi)
-- [ ] **8.** Function calling: richiesta prenotazione (email reception) + adapter PMS del primo hotel  ← PROSSIMO
-- [ ] **9.** Server GPU dedicato EU (noleggio iniziale) con vLLM
+- [~] **8.** Function calling — fatti: booking (`POST /api/booking`) + email stub + interfaccia PMS. Restano: LLM function-calling, SMTP reale, connettore PMS del cliente
+- [ ] **9.** Server GPU dedicato EU (noleggio iniziale) con vLLM — infrastruttura (decisioni utente)
 
 ## Prossimo passo
 
-**Passo 8 — function calling:**
-1. **Richiesta di prenotazione**: salvataggio in `booking_requests` (via `tenant_transaction`) + **email alla reception** dietro un adapter (stub in dev, SMTP EU in prod). Endpoint `POST /api/booking`. Testabile offline con email-stub.
-2. **Adapter PMS**: interfaccia comune (`get_disponibilita`, `get_prezzo`) con connettore su misura per il primo hotel; cache breve su Redis. Iniziare con un adapter finto/manuale.
-Nota: parte codificabile/testabile offline (booking + email stub); il PMS reale è "su misura per cliente" e richiede dati del cliente.
+Il backend "offline" è essenzialmente completo (Passi 1–8 nella loro parte codificabile). Le prossime azioni richiedono runtime o decisioni, in ordine consigliato:
+
+1. **Verifica runtime end-to-end** (serve Docker funzionante — su questa macchina WSL2 non era pronto):
+   `docker compose down -v && up -d` → test isolamento; `ollama pull bge-m3` + genera embedding + ricerca; `uvicorn app.api.main:app` e provare `/api/session`→`/api/chat`.
+2. **LLM function calling** per la prenotazione: quando c'è un modello attivo (Ollama/vLLM) che supporta i tool, far invocare `create_booking` dalla conversazione.
+3. **SMTP reale** (servizio email EU) al posto di `StubEmailSender` (aggiungere settaggi env + usare `SmtpEmailSender`).
+4. **Connettore PMS del primo hotel reale** — su misura, in sopralluogo.
+5. **Passo 9** — noleggio server GPU EU + vLLM: **decisione utente** (provider, budget).
 
 ## Decisioni prese
 
@@ -61,6 +66,7 @@ Nota: parte codificabile/testabile offline (booking + email stub); il PMS reale 
 - **2026-07-01** — Passo 6/1: endpoint con **provider iniettabili** (test via `dependency_overrides`, senza DB/modello); handler sincroni che riusano i moduli testati; il `tenant_id` viaggia dentro il token firmato. [docs/05](docs/05_api_fastapi.md).
 - **2026-07-01** — Passo 6/2: `answer()` della chat disaccoppiato dal DB (riceve `search_fn`) → orchestrazione testabile offline; `session_id` preso dal token firmato; sessioni Redis con TTL (GDPR); LLM dietro adapter (Stub/Ollama). [docs/06](docs/06_api_chat_sessioni.md).
 - **2026-07-01** — Passo 7: calcoli deterministici in `calc.py` (l'IA non calcola nulla); regole+prompt in `prompt.py`; conversione °C→K già pronta nei fatti stanza. [docs/07](docs/07_governance_risposte.md).
+- **2026-07-01** — Passo 8: prenotazione come **richiesta** `pending` (non conferma); email e PMS dietro adapter (stub/fake in dev); `reception_email` per-tenant; RLS anche in scrittura (`WITH CHECK`). [docs/08](docs/08_prenotazioni_pms.md).
 - **2026-06-18** (dal remoto) — Ruolo `app_user` non-superuser; `FORCE ROW LEVEL SECURITY`; policy `SET LOCAL` + `current_setting(..., true)`. [docs/01](docs/01_setup_docker_database.md).
 
 ## Note / questioni aperte
