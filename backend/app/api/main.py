@@ -17,7 +17,7 @@ from __future__ import annotations
 import uuid
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from ..config import settings
@@ -93,3 +93,40 @@ def search(
             for h in hits
         ],
     )
+
+
+# --- /api/rooms -------------------------------------------------------------
+class RoomOut(BaseModel):
+    room_number: str
+    room_type: str
+    floor: int
+    square_meters: int
+    max_guests: int
+    bed_type: str
+    amenities: List[str]
+    air_conditioning: Optional[dict] = None
+    refrigerator: Optional[dict] = None
+    view_and_exposure: Optional[dict] = None
+
+
+@app.get("/api/rooms", response_model=List[RoomOut])
+def rooms_list(
+    session: dict = Depends(deps.require_session),
+    reader=Depends(deps.get_room_reader),
+    limiter=Depends(deps.get_rate_limiter),
+) -> List[RoomOut]:
+    tenant_id = session["tenant_id"]
+    deps.enforce_rate_limit(f"rooms:{tenant_id}", limiter)
+    return [RoomOut(**vars(r)) for r in reader.list(tenant_id)]
+
+
+@app.get("/api/rooms/{room_number}", response_model=RoomOut)
+def rooms_get(
+    room_number: str,
+    session: dict = Depends(deps.require_session),
+    reader=Depends(deps.get_room_reader),
+) -> RoomOut:
+    room = reader.get(session["tenant_id"], room_number)
+    if room is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "stanza non trovata")
+    return RoomOut(**vars(room))

@@ -13,8 +13,8 @@
 - **Backend Python** (`backend/`):
   - Passo 4 — embedding (Ollama/Hash) + ricerca semantica pgvector, isolata per tenant.
   - Passo 5 — sicurezza widget: allowlist, token firmati, rate limit, lookup tenant.
-  - Passo 6 (parte 1) — **API FastAPI**: `/health`, `/api/session` (emette token), `/api/search` (RAG).
-- **Test**: **55 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
+  - Passo 6 (in corso) — **API FastAPI**: `/health`, `/api/session` (token), `/api/search` (RAG), `/api/rooms` (lettura stanze).
+- **Test**: **60 unit/integration test offline**, tutti verdi (`cd backend && pytest`).
 
 ## ⚠️ Da verificare al prossimo avvio con Docker (+ Ollama)
 
@@ -38,7 +38,7 @@ uvicorn app.api.main:app --reload    # poi http://localhost:8000/docs
 - [x] **3.** Dati di test: 30 stanze (JSONB) + knowledge base — da caricare (`down -v`)
 - [x] **4.** Pipeline embedding + ricerca semantica pgvector
 - [x] **5.** Sicurezza widget: allowlist + rate limiting + token di sessione
-- [~] **6.** Endpoint FastAPI — **parte 1 fatta** (sicurezza + `/api/search`); manca: lettura stanze, sessioni Redis, chat LLM  ← IN CORSO
+- [~] **6.** Endpoint FastAPI — fatti: sicurezza + `/api/search` + `/api/rooms`; manca: sessioni Redis, chat LLM  ← IN CORSO
 - [ ] **7.** System prompt: regole di risposta + dati/calcoli deterministici (prezzi, orari, conversioni)
 - [ ] **8.** Function calling: richiesta prenotazione (email reception) + adapter PMS del primo hotel
 - [ ] **9.** Server GPU dedicato EU (noleggio iniziale) con vLLM

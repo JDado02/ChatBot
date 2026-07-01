@@ -48,6 +48,23 @@ def get_searcher():
     return searcher
 
 
+def get_room_reader():
+    """Ritorna un oggetto con .list(tenant_id) e .get(tenant_id, room_number)."""
+    from ..db import connect
+    from .. import rooms as rooms_mod
+
+    class _Reader:
+        def list(self, tenant_id: str):
+            with connect() as conn:
+                return rooms_mod.list_rooms(conn, tenant_id)
+
+        def get(self, tenant_id: str, room_number: str):
+            with connect() as conn:
+                return rooms_mod.get_room(conn, tenant_id, room_number)
+
+    return _Reader()
+
+
 _rate_limiter = InMemoryRateLimiter(settings.rate_limit, settings.rate_window_seconds)
 
 
