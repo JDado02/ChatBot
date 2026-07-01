@@ -6,6 +6,7 @@ Assistente virtuale (chatbot) multi-tenant per hotel e altre attività, self-hos
 
 Documento di contesto completo: [`docs/AI_Concierge_Contesto_Progetto.md`](docs/AI_Concierge_Contesto_Progetto.md).
 Flusso di lavoro e avanzamento: [`CLAUDE.md`](CLAUDE.md) (regole) e [`PROGRESS.md`](PROGRESS.md) (roadmap e stato).
+**▶ Come testare tutto + prossimi passi:** [`docs/GUIDA_TEST_E_PROSSIMI_PASSI.md`](docs/GUIDA_TEST_E_PROSSIMI_PASSI.md).
 
 ## Stato attuale
 
