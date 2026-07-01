@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Alpha — demo widget Aria</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1b2430; background: #FBFAF8;
+    }
+    .hero {
+      min-height: 62vh; padding: 28px 24px 64px; color: #fff;
+      background: linear-gradient(135deg, #1E2A4A, #14213D 55%), radial-gradient(120% 80% at 80% 10%, #2b3c66, transparent);
+      background-blend-mode: screen; display: flex; flex-direction: column;
+    }
+    .nav { display: flex; align-items: center; gap: 14px; }
+    .brand { font-weight: 800; letter-spacing: .4px; font-size: 20px; }
+    .brand span { color: #D9A441; }
+    .nav .links { margin-left: auto; display: flex; gap: 22px; opacity: .85; font-size: 14px; }
+    .nav .links a { color: #fff; text-decoration: none; }
+    .hero-main { margin: auto 0; max-width: 640px; }
+    .eyebrow { color: #E9C57D; letter-spacing: 3px; text-transform: uppercase; font-size: 12px; font-weight: 700; }
+    h1 { font-size: 48px; line-height: 1.05; margin: 12px 0 14px; font-weight: 800; }
+    .hero p { font-size: 18px; opacity: .9; max-width: 520px; line-height: 1.6; }
+    .cta { margin-top: 26px; display: inline-block; background: linear-gradient(135deg,#E9BE63,#D9A441); color: #14213D;
+      padding: 13px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+    .strip { display: flex; gap: 40px; flex-wrap: wrap; padding: 26px 24px; background: #fff; border-bottom: 1px solid #eee; }
+    .strip div { font-size: 14px; color: #4b5563; } .strip b { color: #14213D; display: block; font-size: 15px; }
+    .section { max-width: 980px; margin: 0 auto; padding: 44px 24px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 18px; margin-top: 22px; }
+    .card { border: 1px solid #eee; border-radius: 16px; overflow: hidden; background: #fff; }
+    .card .ph { height: 120px; background: linear-gradient(135deg,#e8ecf5,#dfe6f2); }
+    .card:nth-child(2) .ph { background: linear-gradient(135deg,#f3ead9,#efe0c4); }
+    .card:nth-child(3) .ph { background: linear-gradient(135deg,#e3efe8,#d3e7dc); }
+    .card .b { padding: 14px 16px; } .card h3 { margin: 0 0 4px; font-size: 16px; } .card p { margin: 0; color: #6b7280; font-size: 14px; }
+    footer { text-align: center; padding: 30px; color: #9aa2ad; font-size: 13px; }
+    .mode { position: fixed; top: 12px; left: 12px; z-index: 10; font-size: 12px; background: rgba(255,255,255,.9);
+      border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 10px; color: #4b5563; }
+    .mode a { color: #14213D; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="mode" id="mode"></div>
+
+  <header class="hero">
+    <nav class="nav">
+      <div class="brand">Hotel <span>Alpha</span></div>
+      <div class="links"><a>Camere</a><a>Ristorante</a><a>Benessere</a><a>Contatti</a></div>
+    </nav>
+    <div class="hero-main">
+      <div class="eyebrow">Boutique hotel · sul mare</div>
+      <h1>Un soggiorno curato in ogni dettaglio.</h1>
+      <p>30 camere affacciate sul mare, ristorante panoramico e centro benessere.
+         Hai una domanda? Il nostro concierge digitale è in basso a destra, 24 ore su 24.</p>
+      <a class="cta" href="#">Prenota ora</a>
+    </div>
+  </header>
+
+  <div class="strip">
+    <div><b>Check-in 14:00</b> · Check-out 11:00</div>
+    <div><b>Colazione 7:00–10:30</b> · inclusa</div>
+    <div><b>Reception 24h</b> · deposito bagagli</div>
+    <div><b>Wi-Fi in fibra</b> · gratuito</div>
+  </div>
+
+  <section class="section">
+    <div class="eyebrow" style="color:#B8860B">Le nostre camere</div>
+    <h2 style="margin:8px 0 0">Comfort su misura</h2>
+    <div class="cards">
+      <div class="card"><div class="ph"></div><div class="b"><h3>Doppia Deluxe</h3><p>28 m², vista mare, minibar.</p></div></div>
+      <div class="card"><div class="ph"></div><div class="b"><h3>Suite Junior</h3><p>38 m², zona notte separata.</p></div></div>
+      <div class="card"><div class="ph"></div><div class="b"><h3>Suite Panoramica</h3><p>48 m², jacuzzi e balcone.</p></div></div>
+    </div>
+  </section>
+
+  <footer>© Hotel Alpha — pagina dimostrativa per il widget <b>Aria</b>.</footer>
+
+  <!-- Configurazione del widget: demo (default) o live (?mode=live) -->
+  <script>
+    (function () {
+      var live = new URLSearchParams(location.search).get("mode") === "live";
+      window.AriaConfig = {
+        demo: !live,
+        apiUrl: "http://localhost:8000",
+        apiKey: "pk_alpha_dev_0001",
+        hotelName: "Hotel Alpha",
+        assistantName: "Aria",
+      };
+      var m = document.getElementById("mode");
+      m.innerHTML = live
+        ? 'Modalità: <b>LIVE</b> (API reale) · <a href="?">demo</a>'
+        : 'Modalità: <b>DEMO</b> (risposte simulate) · <a href="?mode=live">live</a>';
+    })();
+  </script>
+  <script src="widget.js" defer></script>
+</body>
+</html>
