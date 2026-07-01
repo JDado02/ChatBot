@@ -17,6 +17,7 @@ from __future__ import annotations
 import uuid
 from typing import List, Optional
 
+import httpx
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -95,7 +96,14 @@ def search(
 ) -> SearchResponse:
     tenant_id = session["tenant_id"]
     deps.enforce_rate_limit(f"search:{tenant_id}", limiter)
-    hits = searcher(tenant_id, body.query, body.k)
+    try:
+        hits = searcher(tenant_id, body.query, body.k)
+    except httpx.HTTPError:
+        # Il modello di embedding (Ollama/vLLM) non è raggiungibile.
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "Il servizio di ricerca non è al momento disponibile.",
+        )
     return SearchResponse(
         tenant_id=tenant_id,
         hits=[
@@ -165,7 +173,14 @@ def chat(
     deps.enforce_rate_limit(f"chat:{tenant_id}", limiter)
     # Il session_id della conversazione è quello dentro il token (sid): così la
     # storia è legata alla sessione emessa, non a un input arbitrario del client.
-    result = chat_service(tenant_id, session["sid"], body.message)
+    try:
+        result = chat_service(tenant_id, session["sid"], body.message)
+    except httpx.HTTPError:
+        # Il modello LLM (Ollama/vLLM) non è raggiungibile.
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "L'assistente non è al momento disponibile. Riprova più tardi o contatta la reception.",
+        )
     return ChatResponse(reply=result.reply, sources=result.sources)
 
 
