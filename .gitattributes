@@ -1,0 +1,8 @@
+# Normalizzazione fine-riga.
+# I file che girano DENTRO i container Linux devono avere LF: uno shebang con
+# CRLF (#!/bin/bash\r) rompe l'esecuzione degli script .sh ("required file not
+# found"). Su Windows git convertirebbe a CRLF: qui lo forziamo a LF.
+
+* text=auto
+*.sh  text eol=lf
+*.sql text eol=lf
