@@ -77,4 +77,6 @@ Backend + widget completi e verificati (Docker + browser). Le prossime azioni ri
 - **Sync → async**: gli handler sono sincroni (riuso codice testato); passaggio ad async psycopg quando serve throughput, stesso pattern `set_config`.
 - **CI**: GitHub Action `backend-tests` esegue i 98 test a ogni push. Se non parte, abilitare GitHub Actions nella repo (Settings → Actions).
 - **Settaggi**: nuovi in `.env.example` (SESSION_SECRET, modelli, rate limit, TTL). In prod cambiare `SESSION_SECRET`.
+- **Nuovo PC / Ollama**: per testare l'LLM serve una macchina più potente. Guida `docs/SETUP_NUOVO_PC.md` + script `scripts/setup.sh` / `setup.ps1` (setup automatico, opz. `--with-ollama`).
+- **Doc allineate (2026-07-02)**: `backend/README.md` riscritto, `CLAUDE.md` e guida test aggiornati allo stato reale.
 - Convenzione: a ogni passo aggiornare `PROGRESS.md` + `README.md` e scrivere un report in `docs/0N_*.md`.
